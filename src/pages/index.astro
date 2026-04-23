@@ -1,0 +1,843 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/global.css';
+import { CONFLICTS, MAP_MARKERS, IDEO_LABEL, GEO_LABEL, INTENSITY_LABEL } from '../data/conflicts';
+---
+
+<Layout>
+
+<!-- ── INTEL BAR ── -->
+<div class="intel-bar">
+  <div class="intel-bar-inner">
+    <div class="intel-bar-left">
+      <div class="intel-tag"><span class="intel-dot"></span> SISTEMA OPERATIVO</div>
+      <div class="intel-tag">UTC <strong id="utc-clock">--:--:--</strong></div>
+      <div class="intel-tag">CLASIFICACIÓN: <strong>OSINT // ABIERTO</strong></div>
+    </div>
+    <div class="intel-bar-right">
+      <div class="intel-tag">FUENTES MONITORIZADAS: <strong>247</strong></div>
+      <div class="intel-tag">CONFLICTOS ACTIVOS: <strong>10</strong></div>
+      <div class="intel-tag"><span class="intel-dot amber"></span> ACT. <strong id="last-update">hace 4 min</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── BREAKING ── -->
+<div class="breaking">
+  <div class="breaking-inner">
+    <div class="breaking-label">URGENTE</div>
+    <div class="breaking-ticker" id="breaking-ticker">
+      <div class="breaking-ticker-item active">Gaza documenta 2.400 violaciones del alto el fuego desde octubre, 754 muertos según la oficina de medios palestina.</div>
+      <div class="breaking-ticker-item">Sudán cumple 3 años de guerra: más de 150.000 muertos y 14 millones de desplazados sin acuerdo a la vista.</div>
+      <div class="breaking-ticker-item">FMI advierte que la economía global "está derivando" hacia el escenario adverso por el conflicto en Oriente Medio.</div>
+      <div class="breaking-ticker-item">Taiwán refuerza su sistema "Cúpula" con 40.000 M$ tras nuevas incursiones masivas chinas en marzo.</div>
+      <div class="breaking-ticker-item">Rusia reitera el control completo de Luhansk; Ucrania mantiene contraataques en el frente oriental.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark"><span>OG</span></div>
+      <div class="logo-text">
+        <h1>El Observador Global</h1>
+        <p>Briefing OSINT · Geopolítica Internacional</p>
+      </div>
+    </div>
+    <nav class="nav" id="nav">
+      <a href="#mapa">Mapa</a>
+      <a href="#conflictos">Conflictos</a>
+      <a href="#continentes">Continentes</a>
+      <a href="#economia">Economía</a>
+      <a href="#metodologia">Metodología</a>
+      <a href="#equipo">Equipo</a>
+      <a href="#briefing" class="nav-cta">Suscribirse</a>
+    </nav>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Menú">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ── HERO / MAP ── -->
+<section class="hero" id="mapa">
+  <div class="hero-meta">
+    <span class="classif">OSINT // ABIERTO</span>
+    <span class="classif warn">ACT. HOY 06:00 UTC</span>
+  </div>
+  <h2>Mapa global de <em>conflictos activos</em><br>e intensidad geopolítica</h2>
+  <p class="hero-sub">Seguimiento en tiempo real de los diez focos de mayor riesgo internacional. Análisis comparativo de fuentes con sesgo visible.</p>
+
+  <div class="map-shell">
+    <div class="map-header">
+      <div class="map-title">Mapa Global de Intensidad</div>
+      <div class="map-coords" id="map-coords">PROYECCIÓN: MERCATOR · LAT/LON · ACT: <span id="map-time">--:-- UTC</span></div>
+    </div>
+
+    <div class="map-filters">
+      <div class="filter-group">
+        <span class="filter-label">Intensidad</span>
+        <div class="filter-chips" data-filter="intensity">
+          <button class="chip active" data-value="all">Todos</button>
+          <button class="chip" data-value="critical">Crítico</button>
+          <button class="chip" data-value="high">Alto</button>
+          <button class="chip" data-value="moderate">Moderado</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Tipo</span>
+        <div class="filter-chips" data-filter="type">
+          <button class="chip active" data-value="all">Todos</button>
+          <button class="chip" data-value="belico">Bélico</button>
+          <button class="chip" data-value="hibrido">Híbrido</button>
+          <button class="chip" data-value="diplomatico">Diplomático</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Región</span>
+        <div class="filter-chips" data-filter="region">
+          <button class="chip active" data-value="all">Todas</button>
+          <button class="chip" data-value="europa">Europa</button>
+          <button class="chip" data-value="oriente">Oriente</button>
+          <button class="chip" data-value="africa">África</button>
+          <button class="chip" data-value="asia">Asia</button>
+          <button class="chip" data-value="america">América</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="map-wrap">
+      <div id="leaflet-map"></div>
+    </div>
+
+    <div class="map-legend">
+      <div class="legend-item"><span class="legend-dot critical"></span> Crítico — escalada activa</div>
+      <div class="legend-item"><span class="legend-dot high"></span> Alto — riesgo elevado</div>
+      <div class="legend-item"><span class="legend-dot moderate"></span> Moderado — tensión sostenida</div>
+      <div class="legend-item" style="margin-left:auto;color:var(--text-mute)">Click sobre un marcador para abrir el briefing →</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONFLICTS GRID ── -->
+<section class="conflicts-section" id="conflictos">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Briefings activos</span>
+      <h3>Conflictos prioritarios bajo seguimiento</h3>
+    </div>
+    <p>Diez focos geopolíticos analizados en paralelo. Cada ficha abre un comparativo entre fuentes con orientaciones ideológicas y geopolíticas distintas.</p>
+  </div>
+  <div class="conflicts-grid" id="conflicts-grid"></div>
+</section>
+
+<!-- ── CONTINENTS ── -->
+<section class="continents-section" id="continentes">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Cobertura por regiones</span>
+      <h3>Noticias por continente</h3>
+    </div>
+    <p>Selección editorial diaria agrupada por área geográfica, con etiquetas ideológicas y geopolíticas en cada pieza.</p>
+  </div>
+
+  <div class="tabs-bar" id="tabs-bar">
+    <button class="tab-btn active" data-tab="europa">Europa</button>
+    <button class="tab-btn" data-tab="asia">Asia</button>
+    <button class="tab-btn" data-tab="oriente">Oriente Medio</button>
+    <button class="tab-btn" data-tab="africa">África</button>
+    <button class="tab-btn" data-tab="america">América</button>
+    <button class="tab-btn" data-tab="oceania">Oceanía</button>
+  </div>
+
+  <div class="tab-content active" data-content="europa">
+    <div class="news-grid">
+      <article class="news-item">
+        <div class="news-item-meta"><span>EU · 14:20 UTC</span><span>BBC</span></div>
+        <h5>La UE acuerda nuevo paquete de defensa común para reforzar el flanco oriental</h5>
+        <p>Bruselas confirma una partida adicional centrada en munición, defensa aérea e interoperabilidad entre estados miembros.</p>
+        <div class="news-item-tags"><span class="tag center">CENTRO</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>RU · 13:55 UTC</span><span>RT</span></div>
+        <h5>Moscú denuncia "expansión injustificada" de la presencia militar occidental en Europa del Este</h5>
+        <p>Portavoces oficiales acusan a la OTAN de provocar la escalada y advierten de medidas de respuesta.</p>
+        <div class="news-item-tags"><span class="tag right">DERECHA</span><span class="tag statal">ESTATAL</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>ES · 12:40 UTC</span><span>El País</span></div>
+        <h5>España duplica su contribución a misiones europeas en el Báltico</h5>
+        <p>El Ejecutivo confirma el envío de unidades adicionales y nuevo material para la rotación 2026-1.</p>
+        <div class="news-item-tags"><span class="tag cleft">CENTRO-IZQ</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>UK · 11:18 UTC</span><span>The Guardian</span></div>
+        <h5>Análisis: el coste real de una década de sanciones europeas</h5>
+        <p>Un informe interno señala desequilibrios sectoriales y propone una revisión coordinada con Washington.</p>
+        <div class="news-item-tags"><span class="tag cleft">CENTRO-IZQ</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+    </div>
+  </div>
+
+  <div class="tab-content" data-content="asia">
+    <div class="news-grid">
+      <article class="news-item">
+        <div class="news-item-meta"><span>CN · 15:00 UTC</span><span>Xinhua</span></div>
+        <h5>Pekín reitera principio de "Una sola China" tras nuevas maniobras en el Estrecho</h5>
+        <p>El comunicado oficial enmarca los ejercicios como rutinarios y defensivos.</p>
+        <div class="news-item-tags"><span class="tag left">IZQUIERDA</span><span class="tag statal">ESTATAL</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>JP · 14:10 UTC</span><span>Nikkei Asia</span></div>
+        <h5>Japón refuerza su flota en torno a Okinawa ante incremento de actividad regional</h5>
+        <p>Tokio anuncia despliegues adicionales y nuevos sistemas de vigilancia marítima.</p>
+        <div class="news-item-tags"><span class="tag cright">CENTRO-DER</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>IN · 13:25 UTC</span><span>The Hindu</span></div>
+        <h5>India consolida su política exterior multipolar con nueva ronda de cumbres bilaterales</h5>
+        <p>Nueva Delhi mantiene equilibrios entre Washington, Moscú y Pekín mientras impulsa el eje BRICS.</p>
+        <div class="news-item-tags"><span class="tag cleft">CENTRO-IZQ</span><span class="tag nonalign">NO ALINEADO</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>KR · 12:50 UTC</span><span>Korea Herald</span></div>
+        <h5>Seúl y Tokio revisan su cooperación en inteligencia ante actividad norcoreana</h5>
+        <p>Ambas capitales acuerdan ampliar canales de intercambio y ejercicios conjuntos.</p>
+        <div class="news-item-tags"><span class="tag center">CENTRO</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+    </div>
+  </div>
+
+  <div class="tab-content" data-content="oriente">
+    <div class="news-grid">
+      <article class="news-item">
+        <div class="news-item-meta"><span>QA · 14:30 UTC</span><span>Al Jazeera</span></div>
+        <h5>La crisis humanitaria en Gaza se profundiza pese a las nuevas rondas de mediación</h5>
+        <p>Organizaciones internacionales advierten de niveles críticos de acceso a suministros básicos.</p>
+        <div class="news-item-tags"><span class="tag cleft">CENTRO-IZQ</span><span class="tag multipolar">MULTIPOLAR</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>IL · 13:40 UTC</span><span>Times of Israel</span></div>
+        <h5>Tel Aviv anuncia nuevas operaciones selectivas en respuesta a ataques con cohetes</h5>
+        <p>El gabinete de seguridad amplía objetivos y redefine el perímetro operativo.</p>
+        <div class="news-item-tags"><span class="tag cright">CENTRO-DER</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>SA · 12:55 UTC</span><span>Arab News</span></div>
+        <h5>Riad propone marco diplomático regional con apoyo del Golfo y mediación de la Liga Árabe</h5>
+        <p>La iniciativa busca un cauce alternativo a las negociaciones occidentales.</p>
+        <div class="news-item-tags"><span class="tag cright">CENTRO-DER</span><span class="tag multipolar">MULTIPOLAR</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>IR · 11:20 UTC</span><span>PressTV</span></div>
+        <h5>Teherán reafirma su derecho a la defensa propia tras los ataques de febrero</h5>
+        <p>El ministerio de exteriores iraní advierte de consecuencias "proporcionales y simétricas".</p>
+        <div class="news-item-tags"><span class="tag right">DERECHA</span><span class="tag statal">ESTATAL</span></div>
+      </article>
+    </div>
+  </div>
+
+  <div class="tab-content" data-content="africa">
+    <div class="news-grid">
+      <article class="news-item">
+        <div class="news-item-meta"><span>SD · 15:10 UTC</span><span>Sudan Tribune</span></div>
+        <h5>Las RSF consolidan control en Darfur mientras las SAF mantienen el corredor hacia Port Sudan</h5>
+        <p>Tres años de conflicto dejan más de 150.000 muertos y 14 millones de desplazados.</p>
+        <div class="news-item-tags"><span class="tag center">CENTRO</span><span class="tag nonalign">NO ALINEADO</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>ML · 14:00 UTC</span><span>RFI Afrique</span></div>
+        <h5>Mali expulsa a los últimos contingentes de la misión MINUSMA y refuerza cooperación con Rusia</h5>
+        <p>Bamako cierra el capítulo de la presencia multilateral occidental y se orienta hacia Moscú.</p>
+        <div class="news-item-tags"><span class="tag cleft">CENTRO-IZQ</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>ZA · 13:00 UTC</span><span>Daily Maverick</span></div>
+        <h5>Las voces africanas reclaman protagonismo en su propia agenda de seguridad</h5>
+        <p>Perspectiva continental con énfasis en soberanía y crítica al intervencionismo externo.</p>
+        <div class="news-item-tags"><span class="tag cleft">CENTRO-IZQ</span><span class="tag nonalign">NO ALINEADO</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>ET · 11:50 UTC</span><span>Addis Standard</span></div>
+        <h5>La Unión Africana refuerza su mediación en el conflicto del Sahel con nueva cumbre en Addis</h5>
+        <p>Los líderes continentales buscan un marco regional de seguridad al margen de potencias externas.</p>
+        <div class="news-item-tags"><span class="tag center">CENTRO</span><span class="tag nonalign">NO ALINEADO</span></div>
+      </article>
+    </div>
+  </div>
+
+  <div class="tab-content" data-content="america">
+    <div class="news-grid">
+      <article class="news-item">
+        <div class="news-item-meta"><span>VE · 14:45 UTC</span><span>El Nacional</span></div>
+        <h5>Caracas mantiene posición sobre el Esequibo mientras Guyana acelera explotación petrolera</h5>
+        <p>La disputa territorial entra en una nueva fase con la entrada en producción de pozos offshore.</p>
+        <div class="news-item-tags"><span class="tag left">IZQUIERDA</span><span class="tag statal">ESTATAL</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>BR · 13:30 UTC</span><span>Folha de S.Paulo</span></div>
+        <h5>Brasil ofrece mediación regional para evitar escalada en la disputa Venezuela-Guyana</h5>
+        <p>Brasilia propone un mecanismo de diálogo en el marco de UNASUR con garantías petroleras.</p>
+        <div class="news-item-tags"><span class="tag cleft">CENTRO-IZQ</span><span class="tag nonalign">NO ALINEADO</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>US · 12:20 UTC</span><span>The New York Times</span></div>
+        <h5>Washington revisa su estrategia hemisférica ante el repunte del Esequibo</h5>
+        <p>La administración contempla nuevas garantías de seguridad para Georgetown en caso de escalada.</p>
+        <div class="news-item-tags"><span class="tag cleft">CENTRO-IZQ</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>MX · 11:00 UTC</span><span>La Jornada</span></div>
+        <h5>México llama al diálogo y la no intervención en los conflictos hemisféricos</h5>
+        <p>La cancillería reitera los principios de no intervención y solución pacífica de controversias.</p>
+        <div class="news-item-tags"><span class="tag left">IZQUIERDA</span><span class="tag nonalign">NO ALINEADO</span></div>
+      </article>
+    </div>
+  </div>
+
+  <div class="tab-content" data-content="oceania">
+    <div class="news-grid">
+      <article class="news-item">
+        <div class="news-item-meta"><span>AU · 14:15 UTC</span><span>The Australian</span></div>
+        <h5>Australia refuerza su postura en el Indo-Pacífico con nuevos acuerdos AUKUS</h5>
+        <p>Canberra avanza en la adquisición de submarinos de propulsión nuclear y cooperación en IA militar.</p>
+        <div class="news-item-tags"><span class="tag cright">CENTRO-DER</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>NZ · 13:00 UTC</span><span>NZ Herald</span></div>
+        <h5>Nueva Zelanda reafirma su política exterior independiente pero dentro del marco Five Eyes</h5>
+        <p>Wellington equilibra sus relaciones con China y la alianza occidental en el Pacífico Sur.</p>
+        <div class="news-item-tags"><span class="tag center">CENTRO</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>PG · 11:40 UTC</span><span>RNZ Pacific</span></div>
+        <h5>Papúa Nueva Guinea negocia acuerdos de seguridad con EE.UU. y Australia simultáneamente</h5>
+        <p>Port Moresby busca maximizar su posición estratégica en el competido Pacífico.</p>
+        <div class="news-item-tags"><span class="tag center">CENTRO</span><span class="tag nonalign">NO ALINEADO</span></div>
+      </article>
+      <article class="news-item">
+        <div class="news-item-meta"><span>FJ · 10:30 UTC</span><span>Fiji Times</span></div>
+        <h5>Las islas del Pacífico exigen protagonismo en la cumbre climática ante las grandes potencias</h5>
+        <p>Los estados insulares elevan su voz sobre seguridad climática como amenaza existencial real.</p>
+        <div class="news-item-tags"><span class="tag cleft">CENTRO-IZQ</span><span class="tag nonalign">NO ALINEADO</span></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ── ECONOMICS ── -->
+<section class="eco-section" id="economia">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Pulso económico</span>
+      <h3>Economía y geopolítica</h3>
+    </div>
+    <p>Indicadores y análisis sobre cómo los conflictos activos están reconfigurando los mercados, las cadenas de suministro y la política monetaria global.</p>
+  </div>
+
+  <div class="eco-tickers">
+    <div class="eco-ticker up">
+      <div class="eco-ticker-symbol">FMI · WEO Abr 2026</div>
+      <div class="eco-ticker-name">Crecimiento mundial proyectado 2026</div>
+      <div class="eco-ticker-value">3,1%</div>
+      <div class="eco-ticker-change">▲ desaceleración vs. 3,4% en 2025</div>
+    </div>
+    <div class="eco-ticker down">
+      <div class="eco-ticker-symbol">USD/EUR · ARANCELES</div>
+      <div class="eco-ticker-name">Arancel efectivo medio EE.UU. (mar 2026)</div>
+      <div class="eco-ticker-value">10,3%</div>
+      <div class="eco-ticker-change">▲ desde 2,2% a inicios de 2025</div>
+    </div>
+    <div class="eco-ticker up">
+      <div class="eco-ticker-symbol">BRENT · OPEC</div>
+      <div class="eco-ticker-name">Pico Brent tras crisis Ormuz</div>
+      <div class="eco-ticker-value">119 $</div>
+      <div class="eco-ticker-change">▲ por crisis Mar Rojo / Irán</div>
+    </div>
+    <div class="eco-ticker flat">
+      <div class="eco-ticker-symbol">BCE · ZONA EURO</div>
+      <div class="eco-ticker-name">Inflación general proyectada</div>
+      <div class="eco-ticker-value">~2,0%</div>
+      <div class="eco-ticker-change">▬ subyacente convergiendo en 2027</div>
+    </div>
+    <div class="eco-ticker down">
+      <div class="eco-ticker-symbol">FMI · MERCADOS EMERGENTES</div>
+      <div class="eco-ticker-name">Crecimiento Mundial México 2026</div>
+      <div class="eco-ticker-value">1,6%</div>
+      <div class="eco-ticker-change">▲ revisión al alza desde 1,5% (ene)</div>
+    </div>
+  </div>
+
+  <div class="eco-grid">
+    <div class="eco-main">
+      <article class="eco-article">
+        <div class="eco-article-meta">
+          <span><span class="eco-cat alert">ALERTA</span> 17 abr 2026 · 09:00 UTC</span>
+          <span class="eco-source">El Financiero</span>
+        </div>
+        <h4>El FMI advierte que la economía global "está derivando" hacia el escenario adverso</h4>
+        <p>El economista jefe del Fondo, Pierre-Olivier Gourinchas, reconoció que el pronóstico publicado en abril ya nació desfasado. El informe se titula "Global Economy in the Shadow of War" y plantea tres caminos posibles tras los ataques contra Irán de febrero y el cierre de facto del Estrecho de Ormuz. El escenario base prevé una desaceleración del crecimiento al 3,1% en 2026 y al 3,2% en 2027, con la energía como variable crítica.</p>
+        <div class="eco-article-tags"><span class="tag center">CENTRO</span><span class="tag nonalign">NO ALINEADO</span></div>
+      </article>
+      <article class="eco-article">
+        <div class="eco-article-meta">
+          <span><span class="eco-cat policy">POLÍTICA</span> Abr 2026</span>
+          <span class="eco-source">EBC Financial Group</span>
+        </div>
+        <h4>Aranceles: el efectivo medio de EE.UU. alcanza el 10,3%, máximo en décadas</h4>
+        <p>Según estimaciones de Penn Wharton, la tasa arancelaria efectiva media de EE.UU. se sitúa en el 10,3% hasta enero de 2026, frente al 2,2% de inicios de 2025. El acuerdo arancelario India–EE.UU. ha reducido el efectivo bilateral de cerca del 50% al 18%.</p>
+        <div class="eco-article-tags"><span class="tag cright">CENTRO-DER</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+      <article class="eco-article">
+        <div class="eco-article-meta">
+          <span><span class="eco-cat market">MERCADOS</span> Abr 2026</span>
+          <span class="eco-source">Banco Central Europeo</span>
+        </div>
+        <h4>El BCE alerta sobre fragmentación de cadenas de suministro por tensiones comerciales</h4>
+        <p>El Boletín Económico nº 2/2026 señala que las tensiones arancelarias podrían ampliar la fragmentación de las cadenas globales. La inflación general podría situarse en torno al 2% en la zona euro y la subyacente convergería a ese nivel en 2027.</p>
+        <div class="eco-article-tags"><span class="tag center">CENTRO</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+    </div>
+    <div class="eco-side">
+      <article class="eco-article eco-article-side">
+        <div class="eco-article-meta"><span>16 abr 2026</span><span class="eco-source">Infobae</span></div>
+        <h4>Argentina cerró 2025 con un crecimiento del 4,4%, el mayor desde 2022</h4>
+        <p>El consenso de analistas proyecta un PIB de 3,2% para 2026 y 3,1% para 2027, en un contexto de reformas internas y nuevas condiciones financieras.</p>
+        <div class="eco-article-tags"><span class="tag cright">CENTRO-DER</span><span class="tag nonalign">NO ALINEADO</span></div>
+      </article>
+      <article class="eco-article eco-article-side">
+        <div class="eco-article-meta"><span>10 ene 2026</span><span class="eco-source">El Financiero</span></div>
+        <h4>México: la inflación volvería a superar el 4% en 2026</h4>
+        <p>Ajustes en IEPS a refrescos y tabaco, aranceles a importaciones chinas y el efecto del Mundial 2026 presionan los precios al alza.</p>
+        <div class="eco-article-tags"><span class="tag cright">CENTRO-DER</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+      <article class="eco-article eco-article-side">
+        <div class="eco-article-meta"><span>15 dic 2025</span><span class="eco-source">Stratfor / RANE</span></div>
+        <h4>El uso de activos rusos congelados para financiar Ucrania, sin impacto mayor en el euro</h4>
+        <p>Análisis de inteligencia estratégica sobre el debate europeo en torno al uso de los activos rusos inmovilizados como vía de financiación a Kiev.</p>
+        <div class="eco-article-tags"><span class="tag center">CENTRO</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+      <article class="eco-article eco-article-side">
+        <div class="eco-article-meta"><span>Dic 2025</span><span class="eco-source">Forex Masterclass</span></div>
+        <h4>El "espejismo inflacionario" de 2026: aranceles, efectos base y la Reserva Federal</h4>
+        <p>Los aranceles han tardado más de seis meses en repercutir en los precios al consumo; los efectos base condicionarán las lecturas del IPC estadounidense durante 2026.</p>
+        <div class="eco-article-tags"><span class="tag cright">CENTRO-DER</span><span class="tag atlantist">ATLANTISTA</span></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ── METHODOLOGY ── -->
+<section class="method-section" id="metodologia">
+  <div class="method-inner">
+    <div class="section-head" style="border:none;padding-bottom:0">
+      <div>
+        <span class="eyebrow">Cómo trabajamos</span>
+        <h3>Metodología OSINT</h3>
+      </div>
+      <p>Cinco pasos para convertir fuentes abiertas en análisis geopolítico trazable, comparable y auditado por el lector.</p>
+    </div>
+    <div style="margin-top:40px" class="method-grid">
+      <div class="method-step">
+        <div class="step-num">01</div>
+        <h4>Selección de fuentes</h4>
+        <p>Monitorizamos más de 247 medios y canales oficiales de todo el espectro ideológico y geopolítico, en más de 38 idiomas.</p>
+      </div>
+      <div class="method-step">
+        <div class="step-num">02</div>
+        <h4>Identificación del conflicto</h4>
+        <p>Cada foco geopolítico recibe un identificador único (OG-XX-AAAA-NNN) y un nivel de intensidad actualizable.</p>
+      </div>
+      <div class="method-step">
+        <div class="step-num">03</div>
+        <h4>Etiquetado de sesgo</h4>
+        <p>Cada fuente recibe una doble clasificación visible: ideológica (izquierda → derecha) y geopolítica (atlantista, multipolar, estatal o no alineado).</p>
+      </div>
+      <div class="method-step">
+        <div class="step-num">04</div>
+        <h4>Análisis comparativo</h4>
+        <p>Se confrontan los relatos de fuentes distintas sobre el mismo hecho para hacer visibles los marcos narrativos en juego.</p>
+      </div>
+      <div class="method-step">
+        <div class="step-num">05</div>
+        <h4>Trazabilidad pública</h4>
+        <p>Cada informe lleva un identificador único, fecha de cierre y enlaces verificables a las fuentes originales para su consulta independiente.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── BRIEFING ── -->
+<section class="briefing-section" id="briefing">
+  <div class="briefing-card">
+    <div class="briefing-info">
+      <span class="eyebrow">Suscripción</span>
+      <h3>Briefing diario en tu bandeja a las 06:00 UTC</h3>
+      <p>Resumen ejecutivo con los movimientos clave de las últimas 24 horas, comparativos de fuentes y alertas tempranas. Pensado para leer en menos de 5 minutos.</p>
+      <ul class="briefing-features">
+        <li>Resumen de los 10 conflictos prioritarios</li>
+        <li>Mapa de calor diario actualizado</li>
+        <li>Selección de titulares por orientación</li>
+        <li>Alertas de breaking news en tiempo real</li>
+      </ul>
+    </div>
+    <form class="briefing-form" id="briefing-form" novalidate>
+      <div class="form-label">Acceso al briefing</div>
+      <div class="form-row"><input type="text" id="form-name" placeholder="Nombre" required /></div>
+      <div class="form-row"><input type="email" id="form-email" placeholder="Correo electrónico" required /></div>
+      <button type="submit" class="form-submit">Suscribirme al briefing</button>
+      <div class="form-msg" id="form-msg"></div>
+    </form>
+  </div>
+</section>
+
+<!-- ── ABOUT ── -->
+<section class="about-section" id="equipo">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Sobre nosotros</span>
+      <h3>Periodismo geopolítico independiente</h3>
+    </div>
+    <p>Una redacción internacional dedicada al análisis OSINT y a la transparencia en la cobertura de conflictos.</p>
+  </div>
+  <div class="about-grid">
+    <div class="about-text">
+      <p><strong style="color:var(--paper)">El Observador Global</strong> nace con la convicción de que la información geopolítica de calidad debe ser comparable, trazable y abierta. Nuestro equipo monitoriza fuentes de todo el espectro ideológico para ofrecer al lector un mapa claro de cómo se cuenta el mundo.</p>
+      <p>Trabajamos con metodología OSINT, sin intermediarios institucionales, sin patrocinios de gobiernos y sin agendas vinculadas a partidos políticos. Cada informe puede ser auditado por el lector siguiendo el rastro de sus fuentes.</p>
+      <p>Nuestra cobertura abarca los principales focos de tensión internacional, con énfasis en hacer accesible al público general lo que tradicionalmente quedaba reservado a analistas y diplomáticos.</p>
+    </div>
+    <div class="about-stats">
+      <div class="stat"><div class="stat-num">247</div><div class="stat-label">Medios monitorizados</div></div>
+      <div class="stat"><div class="stat-num">38</div><div class="stat-label">Idiomas cubiertos</div></div>
+      <div class="stat"><div class="stat-num">10</div><div class="stat-label">Conflictos activos</div></div>
+      <div class="stat"><div class="stat-num">24/7</div><div class="stat-label">Sala de situación</div></div>
+    </div>
+  </div>
+  <div class="team-grid">
+    <div class="team-card">
+      <div class="team-avatar">AR</div>
+      <h5>Ana Reyes</h5>
+      <div class="team-role">Directora Editorial</div>
+      <p>Veterana en cobertura internacional, especializada en análisis de fuentes abiertas.</p>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar">DK</div>
+      <h5>Dimitri Kovac</h5>
+      <div class="team-role">Analista Eurasia</div>
+      <p>Experto en seguridad regional y dinámicas postsoviéticas. Hablante de seis idiomas.</p>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar">LM</div>
+      <h5>Layla Mansour</h5>
+      <div class="team-role">Analista Oriente Medio</div>
+      <p>Cobertura de conflictos en MENA con foco en mediación y vías diplomáticas.</p>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar">JC</div>
+      <h5>Jian Chen</h5>
+      <div class="team-role">Analista Indo-Pacífico</div>
+      <p>Especializado en seguridad marítima y dinámicas estratégicas asiáticas.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="logo" style="margin-bottom:8px">
+          <div class="logo-mark"><span>OG</span></div>
+          <div class="logo-text">
+            <h1 style="font-size:18px">El Observador Global</h1>
+            <p>Briefing OSINT</p>
+          </div>
+        </div>
+        <p class="footer-about">Periodismo geopolítico de fuentes abiertas. Cobertura comparada, sesgos visibles, trazabilidad pública.</p>
+      </div>
+      <div class="footer-col">
+        <h6>Secciones</h6>
+        <ul>
+          <li><a href="#mapa">Mapa global</a></li>
+          <li><a href="#conflictos">Conflictos</a></li>
+          <li><a href="#continentes">Continentes</a></li>
+          <li><a href="#economia">Economía</a></li>
+          <li><a href="#metodologia">Metodología</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h6>Recursos</h6>
+        <ul>
+          <li><a href="#briefing">Briefing diario</a></li>
+          <li><a href="#equipo">Sobre nosotros</a></li>
+          <li><a href="#">Archivo histórico</a></li>
+          <li><a href="#">Mapa de fuentes</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h6>Legal</h6>
+        <ul>
+          <li><a href="#">Aviso legal</a></li>
+          <li><a href="#">Política editorial</a></li>
+          <li><a href="#">Privacidad</a></li>
+          <li><a href="#">Contacto</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 El Observador Global · Todos los derechos reservados</div>
+      <div>BUILD 2026.04 · OSINT · OPEN SOURCE INTELLIGENCE</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ── MODAL ── -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <div class="modal-head-info">
+        <h3 id="modal-title">—</h3>
+        <div class="modal-meta" id="modal-meta"></div>
+      </div>
+      <button class="modal-close" id="modal-close" aria-label="Cerrar">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-summary" id="modal-summary">—</div>
+      <div class="sources-title">Análisis comparativo de fuentes</div>
+      <div id="modal-sources"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Leaflet JS (must load before our script) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script define:vars={{ CONFLICTS, MAP_MARKERS, IDEO_LABEL, GEO_LABEL, INTENSITY_LABEL }}>
+
+/* ── UTC CLOCK ── */
+function updateClock() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const timeStr = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  const shortStr = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
+  const el = document.getElementById('utc-clock');
+  const mt = document.getElementById('map-time');
+  if (el) el.textContent = timeStr;
+  if (mt) mt.textContent = shortStr;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ── LAST UPDATE ── */
+let lastUpdateMin = 4;
+setInterval(() => {
+  lastUpdateMin = lastUpdateMin >= 59 ? 1 : lastUpdateMin + 1;
+  const el = document.getElementById('last-update');
+  if (el) el.textContent = `hace ${lastUpdateMin} min`;
+}, 60000);
+
+/* ── BREAKING TICKER ── */
+const tickerItems = document.querySelectorAll('.breaking-ticker-item');
+let tickerIdx = 0;
+if (tickerItems.length > 1) {
+  setInterval(() => {
+    tickerItems[tickerIdx].classList.remove('active');
+    tickerIdx = (tickerIdx + 1) % tickerItems.length;
+    tickerItems[tickerIdx].classList.add('active');
+  }, 5000);
+}
+
+/* ── MOBILE MENU ── */
+const menuToggle = document.getElementById('menu-toggle');
+const nav = document.getElementById('nav');
+if (menuToggle && nav) {
+  menuToggle.addEventListener('click', () => nav.classList.toggle('open'));
+  nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => nav.classList.remove('open')));
+}
+
+/* ── MODAL ── */
+const overlay = document.getElementById('modal-overlay');
+const modalClose = document.getElementById('modal-close');
+
+function openModal(key) {
+  const c = CONFLICTS[key];
+  if (!c) return;
+  document.getElementById('modal-title').textContent = c.title;
+  document.getElementById('modal-meta').innerHTML =
+    `<span>INFORME ${c.id}</span><span>· ${c.region}</span><span>· ${c.type}</span>` +
+    `<span class="intensity-badge ${c.intensity}" style="margin-left:auto">${INTENSITY_LABEL[c.intensity]}</span>`;
+  document.getElementById('modal-summary').textContent = c.summary;
+  const sc = document.getElementById('modal-sources');
+  sc.innerHTML = '';
+  c.sources.forEach(s => {
+    const d = document.createElement('div');
+    d.className = 'source-card';
+    d.innerHTML =
+      `<div class="source-head"><div class="source-name">${s.name}</div>` +
+      `<div class="source-tags"><span class="tag ${s.ideo}">${IDEO_LABEL[s.ideo]}</span>` +
+      `<span class="tag ${s.geo}">${GEO_LABEL[s.geo]}</span></div></div>` +
+      `<div class="source-headline">"${s.headline}"</div>` +
+      `<div class="source-take">${s.take}</div>`;
+    sc.appendChild(d);
+  });
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  overlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+if (modalClose) modalClose.addEventListener('click', closeModal);
+if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ── CONFLICTS GRID ── */
+const grid = document.getElementById('conflicts-grid');
+if (grid) {
+  Object.entries(CONFLICTS).forEach(([key, c]) => {
+    const card = document.createElement('div');
+    card.className = `conflict-card ${c.intensity}`;
+    card.innerHTML =
+      `<div class="conflict-card-head">` +
+      `<span class="conflict-id">${c.id}</span>` +
+      `<span class="intensity-badge ${c.intensity}">${INTENSITY_LABEL[c.intensity]}</span></div>` +
+      `<h4>${c.title}</h4>` +
+      `<p>${c.summary.substring(0,140)}…</p>` +
+      `<div class="conflict-meta"><span>${c.region} · ${c.type}</span><span class="arrow">VER BRIEFING →</span></div>`;
+    card.addEventListener('click', () => openModal(key));
+    grid.appendChild(card);
+  });
+}
+
+/* ── CONTINENTAL TABS ── */
+const tabsBar = document.getElementById('tabs-bar');
+if (tabsBar) {
+  tabsBar.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabsBar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.toggle('active', c.dataset.content === tab);
+      });
+    });
+  });
+}
+
+/* ── FORM ── */
+const form = document.getElementById('briefing-form');
+const formMsg = document.getElementById('form-msg');
+if (form && formMsg) {
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const name = document.getElementById('form-name').value.trim();
+    const email = document.getElementById('form-email').value.trim();
+    if (!name || name.length < 2) {
+      formMsg.className = 'form-msg error'; formMsg.textContent = 'Nombre no válido'; return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      formMsg.className = 'form-msg error'; formMsg.textContent = 'Correo no válido'; return;
+    }
+    formMsg.className = 'form-msg success';
+    formMsg.textContent = 'Suscripción confirmada · revisa tu bandeja';
+    form.reset();
+    setTimeout(() => { formMsg.className = 'form-msg'; formMsg.textContent = ''; }, 5000);
+  });
+}
+
+/* ── LEAFLET MAP ── */
+function initMap() {
+  if (typeof L === 'undefined') { setTimeout(initMap, 100); return; }
+
+  const map = L.map('leaflet-map', {
+    center: [20, 15],
+    zoom: 2,
+    minZoom: 2,
+    maxZoom: 6,
+    zoomControl: true,
+    maxBounds: [[-85, -180], [85, 180]],
+    maxBoundsViscosity: 1.0,
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(map);
+
+  const COLOR = { critical: '#a83232', high: '#d4731c', moderate: '#c9a961' };
+  const filters = { intensity: 'all', type: 'all', region: 'all' };
+  const instances = {};
+
+  MAP_MARKERS.forEach(m => {
+    const color = COLOR[m.intensity];
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="position:relative;width:14px;height:14px;color:${color}">` +
+            `<div class="lf-ring" style="color:${color}"></div>` +
+            `<div class="lf-core" style="background:${color};box-shadow:0 0 0 2px rgba(255,255,255,.85),0 0 14px ${color},0 0 30px ${color}"></div>` +
+            `</div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+      popupAnchor: [0, -16],
+    });
+
+    const marker = L.marker([m.lat, m.lng], { icon });
+
+    const popupHtml =
+      `<div class="map-popup">` +
+      `<div class="map-popup-id">${m.tooltipId}</div>` +
+      `<div class="map-popup-title">${m.tooltipTitle}</div>` +
+      `<div class="map-popup-meta">${m.tooltipMeta}</div>` +
+      `<div class="map-popup-action" data-key="${m.key}">CLICK PARA BRIEFING →</div>` +
+      `</div>`;
+
+    marker.bindPopup(popupHtml, { maxWidth: 260, minWidth: 220, closeButton: true });
+    marker.addTo(map);
+
+    marker.on('popupopen', () => {
+      document.querySelectorAll('.map-popup-action').forEach(btn => {
+        btn.addEventListener('click', () => { map.closePopup(); openModal(btn.dataset.key); });
+      });
+    });
+
+    instances[m.key] = { marker, data: m };
+  });
+
+  map.on('mousemove', e => {
+    const lat = Math.abs(e.latlng.lat).toFixed(1);
+    const lng = Math.abs(e.latlng.lng).toFixed(1);
+    const latH = e.latlng.lat >= 0 ? 'N' : 'S';
+    const lngH = e.latlng.lng >= 0 ? 'E' : 'W';
+    const el = document.getElementById('map-coords');
+    if (el) el.innerHTML = `PROYECCIÓN: MERCATOR · LAT ${lat}°${latH} · LON ${lng}°${lngH} · ACT: <span id="map-time">${document.getElementById('map-time')?.textContent || '--:-- UTC'}</span>`;
+  });
+
+  document.querySelectorAll('.filter-chips').forEach(group => {
+    const fk = group.dataset.filter;
+    group.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        filters[fk] = chip.dataset.value;
+        Object.values(instances).forEach(({ marker, data }) => {
+          const show =
+            (filters.intensity === 'all' || filters.intensity === data.intensity) &&
+            (filters.type === 'all' || filters.type === data.type) &&
+            (filters.region === 'all' || filters.region === data.region);
+          if (show) { if (!map.hasLayer(marker)) marker.addTo(map); }
+          else { if (map.hasLayer(marker)) map.removeLayer(marker); }
+        });
+      });
+    });
+  });
+}
+
+initMap();
+</script>
+
+</Layout>
